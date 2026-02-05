@@ -28,6 +28,7 @@ export default function Home() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [unlockedDays, setUnlockedDays] = useState<number>(0);
   const [showContent, setShowContent] = useState(false); 
+  const [toastMessage, setToastMessage] = useState(""); // 💬 State for the "See you Puttu" popup
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -54,6 +55,12 @@ export default function Home() {
       setUnlockedDays(0); // Lock everything if it's not February
     }
   }, []);
+
+  // 💬 Helper to show the popup message
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 3000); // Hide after 3 seconds
+  };
 
   // 🔄 LOOP LOGIC: Plays full video once, then loops the last 3 seconds
   const handleVideoEnd = () => {
@@ -105,7 +112,7 @@ export default function Home() {
     setShowContent(false); 
   };
 
-  // 🔔 NOTIFY HIM FUNCTION (Opens Email App)
+  // 🔔 NOTIFY HIM FUNCTION (Opens Email + Shows Popup)
   const handleNotify = () => {
     const today = new Date();
     const currentDay = VALENTINE_WEEK.find(d => d.id === unlockedDays);
@@ -123,8 +130,13 @@ export default function Home() {
     }
     body += `Love you! ❤️`;
 
+    // 💬 Show the "See you Puttu" popup
+    showToast("See you Puttu! 💌");
+
     // Open Mail App
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setTimeout(() => {
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }, 1000);
   };
 
   if (!mounted) return null;
@@ -227,12 +239,13 @@ export default function Home() {
               <p className="text-rose-400 text-sm">Come back every day for a new surprise!</p>
               
               {/* 🔔 NOTIFY BUTTON */}
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.9 }}
                 onClick={handleNotify}
-                className="mt-2 text-xs bg-rose-100 text-rose-600 px-4 py-2 rounded-full hover:bg-rose-200 transition font-bold shadow-sm"
+                className="mt-4 text-sm bg-rose-500 text-white px-6 py-2 rounded-full shadow-md font-bold hover:bg-rose-600 transition"
               >
                 🔔 Notify Him!
-              </button>
+              </motion.button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pb-10">
@@ -244,7 +257,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    onClick={() => isUnlocked && setSelectedDay(day.id)}
+                    onClick={() => isUnlocked ? setSelectedDay(day.id) : showToast(`Wait for ${day.date} Puttu! 🔒`)}
                     className={`relative aspect-square rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-md cursor-pointer transition-transform transform ${
                       isUnlocked ? `bg-gradient-to-br ${day.color} hover:scale-105` : "bg-gray-100 grayscale opacity-70"
                     }`}
@@ -332,6 +345,20 @@ export default function Home() {
 
               <p className="mt-6 text-xs text-rose-700 opacity-60 uppercase tracking-widest">Unlocked • {currentDayData.date}</p>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🗨️ CUSTOM TOAST / POPUP MESSAGE */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-black/80 text-white px-6 py-3 rounded-full shadow-xl backdrop-blur-md font-bold text-sm whitespace-nowrap"
+          >
+            {toastMessage}
           </motion.div>
         )}
       </AnimatePresence>
