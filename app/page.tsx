@@ -244,7 +244,7 @@ export default function Home() {
                 onClick={handleNotify}
                 className="mt-4 text-sm bg-rose-500 text-white px-6 py-2 rounded-full shadow-md font-bold hover:bg-rose-600 transition"
               >
-                🔔 Notify Him!
+                🔔 Notify ME!
               </motion.button>
             </div>
 
