@@ -36,7 +36,6 @@ export default function Home() {
     setWindowSize({ width: window.innerWidth, height: window.innerHeight });
 
     // 🔒 REAL DATE LOCKING LOGIC
-    // ⚠️ NOTE: If you are testing, change the logic below.
     const now = new Date();
     const currentMonth = now.getMonth(); // 0 = Jan, 1 = Feb
     const currentDate = now.getDate();
@@ -56,7 +55,15 @@ export default function Home() {
     }
   }, []);
 
-  // Removed handleVideoEnd because we are now using the native loop attribute
+  // 🔄 LOOP LOGIC: Plays full video once, then loops the last 3 seconds
+  const handleVideoEnd = () => {
+    if (videoRef.current) {
+      const loopStartTime = Math.max(0, videoRef.current.duration - 3);
+      videoRef.current.currentTime = loopStartTime;
+      videoRef.current.play();
+    }
+  };
+
   const setPlayBackSpeed = () => {
     if (videoRef.current) videoRef.current.playbackRate = 0.75;
   };
@@ -96,6 +103,28 @@ export default function Home() {
   const closeModal = () => {
     setSelectedDay(null);
     setShowContent(false); 
+  };
+
+  // 🔔 NOTIFY HIM FUNCTION (Opens Email App)
+  const handleNotify = () => {
+    const today = new Date();
+    const currentDay = VALENTINE_WEEK.find(d => d.id === unlockedDays);
+    const nextDay = VALENTINE_WEEK.find(d => d.id === unlockedDays + 1);
+
+    const subject = `Valentine Surprise: ${currentDay ? currentDay.title : "New Update"} Unlocked! 💖`;
+    
+    // Create a body with a countdown message
+    let body = `Hey Pookie! \n\n`;
+    if (currentDay) {
+        body += `🎉 Today is ${currentDay.title}! Go check your surprise now: ${window.location.href}\n\n`;
+    }
+    if (nextDay) {
+        body += `⏳ Next unlock: ${nextDay.title} is coming tomorrow! Get ready!\n\n`;
+    }
+    body += `Love you! ❤️`;
+
+    // Open Mail App
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   if (!mounted) return null;
@@ -148,14 +177,14 @@ export default function Home() {
             className="z-10 w-full max-w-md p-6 text-center"
           >
             <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-white/50 mb-8">
-              {/* 🛠️ FIXED: Added loop and key for better sad/happy switching */}
               <video
                 ref={videoRef}
                 key={yesPressed ? "celebration" : (isSad ? "sad" : "happy")}
                 autoPlay 
-                loop 
+                // loop <--- REMOVED THIS so JS can handle the 3-sec loop
                 playsInline 
                 onCanPlay={setPlayBackSpeed}
+                onEnded={handleVideoEnd} 
                 className="w-full h-full object-cover"
               >
                 <source src={isSad ? "/sad.mp4" : "/elephant.mp4"} type="video/mp4" />
@@ -196,7 +225,14 @@ export default function Home() {
             <div className="text-center mb-6 pt-4">
               <h1 className="font-pacifico text-3xl text-rose-600">Our Valentine Week ❤️</h1>
               <p className="text-rose-400 text-sm">Come back every day for a new surprise!</p>
-              {/* Button Removed Here as requested */}
+              
+              {/* 🔔 NOTIFY BUTTON */}
+              <button 
+                onClick={handleNotify}
+                className="mt-2 text-xs bg-rose-100 text-rose-600 px-4 py-2 rounded-full hover:bg-rose-200 transition font-bold shadow-sm"
+              >
+                🔔 Notify Him!
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pb-10">
